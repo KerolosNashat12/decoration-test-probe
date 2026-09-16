@@ -8,6 +8,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
 import { TenantApplicationsModule } from './tenant-applications/tenant-applications.module.js';
 import { AdminUsersModule } from './admin-users/admin-users.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
+import { TenantDashboardModule } from './tenant-dashboard/tenant-dashboard.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { DashboardModule } from './dashboard/dashboard.module.js';
     TenantApplicationsModule,
     AdminUsersModule,
     DashboardModule,
+    TenantDashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,51 @@
+{
+  "common": {
+    "cancel": "إلغاء",
+    "saveChanges": "حفظ التغييرات",
+    "notProvided": "—",
+    "comingSoon": "قريبًا"
+  },
+  "nav": {
+    "profile": "ملف المتجر",
+    "catalog": "الكتالوج",
+    "rfqs": "الردود على طلبات الأسعار",
+    "signOut": "تسجيل الخروج"
+  },
+  "login": {
+    "welcome": "أهلاً بعودتك 👋",
+    "subtitle": "سجّل الدخول لإدارة ملف متجرك.",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "signIn": "تسجيل الدخول",
+    "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+  },
+  "profile": {
+    "title": "ملف المتجر",
+    "subtitle": "الشكل الذي يظهر به متجرك لفريق إدارة Decoration.",
+    "cardTitle": "بيانات متجرك",
+    "form": {
+      "name": "اسم المتجر / النشاط",
+      "contactName": "اسم جهة الاتصال",
+      "phone": "الهاتف",
+      "whatsapp": "واتساب",
+      "email": "البريد الإلكتروني",
+      "district": "المنطقة",
+      "categories": "الفئات"
+    },
+    "updateSuccess": "تم تحديث الملف",
+    "updateError": "تعذّر حفظ التغييرات.",
+    "loadError": "تعذّر تحميل ملفك."
+  },
+  "categories": {
+    "TILES_CERAMICS": "بلاط وسيراميك",
+    "PAINT_COATINGS": "دهانات وطلاءات",
+    "SANITARY_WARE": "أدوات صحية",
+    "ELECTRICAL_FIXTURES": "تجهيزات كهربائية",
+    "HARDWARE": "أدوات معدنية",
+    "CARPENTRY_WOOD": "نجارة وأخشاب"
+  },
+  "language": {
+    "english": "الإنجليزية",
+    "arabic": "العربية"
+  }
+}

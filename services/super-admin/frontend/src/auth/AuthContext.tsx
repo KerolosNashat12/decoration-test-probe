@@ -6,6 +6,7 @@ interface AuthContextValue {
   admin: AdminUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateAdmin: (patch: Partial<AdminUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -32,6 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         setAdmin(null);
+      },
+      updateAdmin(patch: Partial<AdminUser>) {
+        setAdmin((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, ...patch };
+          localStorage.setItem(USER_KEY, JSON.stringify(next));
+          return next;
+        });
       },
     }),
     [admin],

@@ -1,0 +1,51 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "saveChanges": "Save changes",
+    "notProvided": "—",
+    "comingSoon": "Coming soon"
+  },
+  "nav": {
+    "profile": "Shop Profile",
+    "catalog": "Catalog",
+    "rfqs": "RFQ Replies",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "welcome": "Welcome back 👋",
+    "subtitle": "Sign in to manage your shop's profile.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "error": "Invalid email or password."
+  },
+  "profile": {
+    "title": "Shop Profile",
+    "subtitle": "How your shop appears to Decoration's admin team.",
+    "cardTitle": "Your details",
+    "form": {
+      "name": "Shop / business name",
+      "contactName": "Contact name",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "district": "District",
+      "categories": "Categories"
+    },
+    "updateSuccess": "Profile updated",
+    "updateError": "Could not save changes.",
+    "loadError": "Could not load your profile."
+  },
+  "categories": {
+    "TILES_CERAMICS": "Tiles & Ceramics",
+    "PAINT_COATINGS": "Paint & Coatings",
+    "SANITARY_WARE": "Sanitary Ware",
+    "ELECTRICAL_FIXTURES": "Electrical Fixtures",
+    "HARDWARE": "Hardware",
+    "CARPENTRY_WOOD": "Carpentry & Wood"
+  },
+  "language": {
+    "english": "English",
+    "arabic": "Arabic"
+  }
+}

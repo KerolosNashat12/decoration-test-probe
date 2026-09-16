@@ -47,4 +47,10 @@ export class TenantsController {
   reactivate(@Param('id') id: string) {
     return this.tenantsService.reactivate(id);
   }
+
+  @Roles('SUPER_ADMIN')
+  @Patch(':id/provision-dashboard')
+  provisionDashboard(@Param('id') id: string) {
+    return this.tenantsService.provisionDashboard(id);
+  }
 }

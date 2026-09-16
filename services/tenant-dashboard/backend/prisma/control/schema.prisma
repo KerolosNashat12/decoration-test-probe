@@ -1,0 +1,35 @@
+// Tenant Dashboard service — CONTROL database (tenant_dashboard_control).
+// One physical database for the whole service. It does NOT hold any
+// tenant's operational data — just the lookup a login by email needs
+// before it knows which per-tenant database to talk to, and the
+// bookkeeping the provisioning flow needs to be idempotent.
+// See ARCHITECTURE.md ("Provisioning flow") at the repo root.
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/control"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CONTROL_DATABASE_URL")
+}
+
+// One row per provisioned tenant. `id` is the SAME id as the Tenant row
+// in Super Admin's database (services/super-admin/backend) — the two
+// services never share a database, but they do share this one identifier
+// so a Tenant on one side and a TenantAccount on the other refer to the
+// same real-world supplier without a foreign key across services.
+model TenantAccount {
+  id           String    @id // == super-admin Tenant.id, assigned by the provisioning caller, not generated here
+  name         String // cached copy of the shop name, for display only
+  email        String    @unique
+  passwordHash String
+  dbName       String    @unique // the physical Postgres database this tenant's data lives in
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+
+  @@map("tenant_accounts")
+}

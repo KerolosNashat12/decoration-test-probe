@@ -1,5 +1,12 @@
 # Deploying Super Admin to Vercel
 
+This covers the **Super Admin service only** — the one service currently
+deployable as-is. Tenant Dashboard (Phase 2) is built and works locally
+(see the "Running the Tenant Dashboard service locally" section of
+`README.md`) but its provisioning step isn't Vercel-serverless-compatible
+yet; see "Tenant Dashboard: not yet deployed to Vercel" at the bottom of
+this file before attempting it.
+
 Everything on Vercel, as decided: the React frontend as a static/SPA
 project, and the NestJS backend as a Vercel serverless function
 (`services/super-admin/backend/api/index.ts`), talking to a managed
@@ -107,3 +114,23 @@ database by hand — both are now automatic:
   the one used for local dev.
 - Local development is unaffected — `npm run start:dev` / `npm run dev`
   still work exactly as before; `api/index.ts` is only used on Vercel.
+
+## Tenant Dashboard: not yet deployed to Vercel
+
+The Tenant Dashboard backend's provisioning flow (creating a new tenant's
+Postgres database and running its migrations) shells out to
+`prisma migrate deploy` and needs a direct superuser/admin Postgres
+connection at request time — both are a poor fit for a Vercel serverless
+function (short execution limit, read-only filesystem, and most managed
+Postgres providers don't expose an ad-hoc `CREATE DATABASE` connection to
+a serverless caller the way this needs). Full reasoning is in the
+"Provisioning flow" section of `ARCHITECTURE.md`.
+
+The realistic production shape is a small always-on provisioning worker
+(or a queue + worker) behind the same internal API contract
+(`POST /internal/provision-tenant`) that `ProvisioningService` already
+implements — the rest of the Tenant Dashboard backend (tenant login,
+profile) has no such constraint and could deploy as a normal serverless
+function once that split happens. Worth revisiting when this service is
+ready to go live; not a blocker for continuing to build Phase 2 against
+real Postgres locally in the meantime.

@@ -6,8 +6,10 @@ import {
   CheckCircleOutlined,
   PauseCircleOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../api/client';
 import { palette } from '../theme';
+import { PageHeader } from '../components/PageHeader';
 import { TENANT_CATEGORY_LABELS, type DashboardStats, type TenantApplication } from '../types';
 
 const STATUS_COLORS: Record<TenantApplication['status'], string> = {
@@ -55,6 +57,7 @@ function StatCard({
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,36 +81,34 @@ export function DashboardPage() {
 
   return (
     <>
-      <Typography.Title level={4} style={{ color: palette.textBase, marginBottom: 20 }}>
-        Overview
-      </Typography.Title>
+      <PageHeader title={t('dashboard.title')} subtitle={t('dashboard.subtitle')} />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard icon={<ShopOutlined />} label="Total tenants" value={stats.totalTenants} accent={palette.primaryActive} />
+          <StatCard icon={<ShopOutlined />} label={t('dashboard.totalTenants')} value={stats.totalTenants} accent={palette.primaryActive} />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard icon={<CheckCircleOutlined />} label="Approved tenants" value={stats.approvedTenants} accent="#3BB273" />
+          <StatCard icon={<CheckCircleOutlined />} label={t('dashboard.approvedTenants')} value={stats.approvedTenants} accent="#3BB273" />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard icon={<FileSearchOutlined />} label="Pending applications" value={stats.pendingApplications} accent="#E4A62C" />
+          <StatCard icon={<FileSearchOutlined />} label={t('dashboard.pendingApplications')} value={stats.pendingApplications} accent="#E4A62C" />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard icon={<PauseCircleOutlined />} label="Suspended tenants" value={stats.suspendedTenants} accent="#E4542C" />
+          <StatCard icon={<PauseCircleOutlined />} label={t('dashboard.suspendedTenants')} value={stats.suspendedTenants} accent="#E4542C" />
         </Col>
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={10}>
-          <Card title="Tenants by category" style={{ borderRadius: 14, height: '100%' }}>
+          <Card title={t('dashboard.tenantsByCategory')} style={{ borderRadius: 14, height: '100%' }}>
             {categoryEntries.length === 0 && (
-              <Typography.Text style={{ color: palette.textTertiary }}>No approved tenants yet.</Typography.Text>
+              <Typography.Text style={{ color: palette.textTertiary }}>{t('dashboard.noApprovedTenants')}</Typography.Text>
             )}
             {categoryEntries.map(([category, count]) => (
               <div key={category} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Typography.Text style={{ color: palette.textSecondary, fontSize: 13 }}>
-                    {TENANT_CATEGORY_LABELS[category]}
+                    {t(`categories.${category}`)}
                   </Typography.Text>
                   <Typography.Text style={{ color: palette.textBase, fontSize: 13, fontWeight: 600 }}>{count}</Typography.Text>
                 </div>
@@ -122,22 +123,25 @@ export function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={14}>
-          <Card title="Recent applications" style={{ borderRadius: 14, height: '100%' }}>
+          <Card title={t('dashboard.recentApplications')} style={{ borderRadius: 14, height: '100%' }}>
             <Table
               size="small"
               rowKey="id"
               pagination={false}
+              scroll={{ x: 500 }}
               dataSource={stats.recentApplications}
               columns={[
-                { title: 'Shop', dataIndex: 'shopName' },
-                { title: 'District', dataIndex: 'district', render: (v) => v ?? '—' },
+                { title: t('dashboard.shop'), dataIndex: 'shopName' },
+                { title: t('dashboard.district'), dataIndex: 'district', render: (v) => v ?? t('common.notProvided') },
                 {
-                  title: 'Status',
+                  title: t('common.status'),
                   dataIndex: 'status',
-                  render: (status: TenantApplication['status']) => <Tag color={STATUS_COLORS[status]}>{status}</Tag>,
+                  render: (status: TenantApplication['status']) => (
+                    <Tag color={STATUS_COLORS[status]}>{t(`tenants.statusOptions.${status}`)}</Tag>
+                  ),
                 },
                 {
-                  title: 'Submitted',
+                  title: t('dashboard.submitted'),
                   dataIndex: 'submittedAt',
                   render: (v: string) => new Date(v).toLocaleDateString(),
                 },

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TenantDashboardClientService } from '../tenant-dashboard/tenant-dashboard-client.service.js';
 import { CreateApplicationDto } from './dto/create-application.dto.js';
 
 @Injectable()
 export class TenantApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenantDashboardClient: TenantDashboardClientService,
+  ) {}
 
   // Public: a supplier requests to join from the website.
   submit(dto: CreateApplicationDto) {
@@ -31,7 +35,7 @@ export class TenantApplicationsService {
   async approve(id: string, reviewerId: string) {
     const application = await this.findOne(id);
 
-    return this.prisma.$transaction(async (tx) => {
+    const { application: updatedApplication, tenant } = await this.prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
           name: application.shopName,
@@ -59,6 +63,27 @@ export class TenantApplicationsService {
 
       return { application: updatedApplication, tenant };
     });
+
+    // Provisioning is a call to a different service, over the network —
+    // deliberately outside the transaction above. If it fails or the
+    // tenant has no email on file, the tenant is still approved; the
+    // Tenants page offers a "Provision dashboard access" retry for it (see
+    // TenantsService.provisionDashboard). See ARCHITECTURE.md.
+    const provisioning = await this.tenantDashboardClient.provisionTenant(tenant);
+    if (provisioning) {
+      await this.prisma.tenant.update({
+        where: { id: tenant.id },
+        data: { dashboardUserEmail: provisioning.email },
+      });
+    }
+
+    return {
+      application: updatedApplication,
+      tenant,
+      provisioning: provisioning
+        ? { email: provisioning.email, temporaryPassword: provisioning.temporaryPassword }
+        : null,
+    };
   }
 
   async reject(id: string, reviewerId: string, reason?: string) {

@@ -31,9 +31,15 @@ export interface Tenant {
   categories: TenantCategory[];
   status: TenantStatus;
   notes: string | null;
+  dashboardUserEmail: string | null;
   createdAt: string;
   updatedAt: string;
   reviewedAt: string | null;
+}
+
+export interface ProvisioningResult {
+  email: string;
+  temporaryPassword: string;
 }
 
 export interface TenantApplication {

@@ -1,0 +1,54 @@
+// Tenant Dashboard service — PER-TENANT schema. This is a *template*: the
+// same migration files under prisma/tenant/migrations get applied to a
+// brand new, empty Postgres database for every tenant, by
+// ProvisioningService, one physical database per tenant (see
+// ARCHITECTURE.md "Multi-tenant isolation — decided"). It is never applied
+// twice against the control database, and no tenant ever shares this
+// database with another tenant.
+//
+// `DATABASE_URL` here is intentionally the *generic* env var name (not
+// CONTROL_DATABASE_URL): at provisioning time the caller sets it to that
+// one new tenant's database before invoking `prisma migrate deploy`, and
+// at request time TenantPrismaFactory does the same per-connection.
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/tenant"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantCategory {
+  TILES_CERAMICS
+  PAINT_COATINGS
+  SANITARY_WARE
+  ELECTRICAL_FIXTURES
+  HARDWARE
+  CARPENTRY_WOOD
+}
+
+// The tenant's own view of their shop info — seeded from Super Admin's
+// Tenant record at provisioning time, editable by the tenant afterwards.
+// Deliberately a single row: `tenantId` is unique and there is exactly one
+// tenant per database, so nothing here is ever scoped by a tenantId column
+// the way a shared-database design would need.
+model Profile {
+  id          String           @id @default(uuid())
+  tenantId    String           @unique // == super-admin Tenant.id / control-db TenantAccount.id
+  name        String
+  contactName String
+  phone       String
+  whatsapp    String?
+  email       String?
+  district    String?
+  categories  TenantCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profile")
+}
