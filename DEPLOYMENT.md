@@ -6,59 +6,54 @@ project, and the NestJS backend as a Vercel serverless function
 Postgres database. This is a monorepo, so **backend and frontend are two
 separate Vercel projects**, each pointed at its own subfolder.
 
-## 1. Database — Neon Postgres (via Vercel Marketplace)
+Migrations and the first admin login are both automatic on deploy — see
+"How the database gets set up" below — so there's no manual database step
+between creating the Vercel projects and having a working live app.
 
-Vercel's own "Vercel Postgres" product now runs on Neon under the hood, so
-the fastest path is provisioning it from inside Vercel:
+## 1. Get a Postgres database
 
-1. In the Vercel dashboard: **Storage → Create Database → Neon (Serverless
-   Postgres)**. Region: pick one close to Egypt (e.g. Frankfurt).
-2. This gives you a `DATABASE_URL` (pooled, for the running app) and
-   usually a second direct/unpooled URL — grab both from the database's
-   **.env.local** tab.
-3. Once, from a machine with network access to that database (any machine
-   works — Neon is reachable over the internet, not firewalled to Vercel):
-   ```bash
-   cd services/super-admin/backend
-   DATABASE_URL="<the direct/unpooled URL>" npx prisma migrate deploy
-   DATABASE_URL="<the direct/unpooled URL>" npx prisma db seed
-   ```
-   This creates the schema and the first Super Admin login
-   (`admin@decoration.local` / `ChangeMe123!` — **change this password
-   after first sign-in**, or set `ADMIN_EMAIL`/`ADMIN_PASSWORD` before
-   seeding).
+Any Postgres host works — the fastest is a free Neon database:
 
-If you'd rather use a different Postgres host (Supabase, Railway, your own),
-that's fine too — anything that hands you a `postgresql://` connection
-string works; just run the same `migrate deploy` / `db seed` once against
-it.
+- **Via Neon directly:** sign up at [neon.tech](https://neon.tech), create
+  a project, copy the connection string it gives you (`postgresql://...`).
+  Takes about a minute, no Vercel account needed for this step.
+- **Via Vercel's dashboard:** Storage → Create Database → Neon (Serverless
+  Postgres) — same result, one click if you're already in Vercel.
+
+Either way, you end up with one `DATABASE_URL` value. Keep it handy for
+step 2.
 
 ## 2. Backend project (Vercel)
 
-Create a new Vercel project from the GitHub repo, but set:
+Create a new Vercel project from the GitHub repo (or `vercel --prod` from
+`services/super-admin/backend` if deploying without GitHub), with:
 
 - **Root Directory:** `services/super-admin/backend`
 - **Framework Preset:** Other
-- **Build Command:** (leave default — `vercel.json` in that folder already
-  routes everything to `api/index.ts`, built by the `@vercel/node` runtime)
-- **Install Command:** default (`npm install`) — this also runs
-  `postinstall: prisma generate` automatically
+- Build/Install commands: leave the defaults — `vercel.json` in that folder
+  routes everything to `api/index.ts`, and `package.json`'s
+  `vercel-build` script (`prisma migrate deploy && prisma generate`) applies
+  the schema to your database automatically on every deploy.
 
 **Environment variables** (Project Settings → Environment Variables):
 
 | Key | Value |
 | --- | --- |
-| `DATABASE_URL` | the pooled Neon connection string from step 1 |
+| `DATABASE_URL` | the connection string from step 1 |
 | `JWT_SECRET` | a long random string (`openssl rand -base64 48`) |
-| `CORS_ORIGIN` | the frontend's Vercel URL once you have it (comma-separated if more than one, e.g. a custom domain too) |
+| `CORS_ORIGIN` | the frontend's Vercel URL once you have it from step 3 (comma-separated if more than one) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | optional — override the default seeded login (`admin@decoration.local` / `ChangeMe123!`) |
 
-Deploy. The live API will be at `https://<backend-project>.vercel.app/api/...`
-— sanity-check with:
+Deploy. The live API is at `https://<backend-project>.vercel.app/api/...` —
+sanity-check with:
 ```bash
 curl -X POST https://<backend-project>.vercel.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@decoration.local","password":"ChangeMe123!"}'
 ```
+A successful login on the very first deploy confirms both the migration and
+the auto-seed worked — **change that password from the Admin Users page
+right after.**
 
 ## 3. Frontend project (Vercel)
 
@@ -66,9 +61,9 @@ Create a second Vercel project from the same repo:
 
 - **Root Directory:** `services/super-admin/frontend`
 - **Framework Preset:** Vite (auto-detected)
-- **Build Command / Output Directory:** defaults are correct
-  (`vercel.json` in that folder adds the SPA rewrite so client-side routes
-  like `/dashboard` don't 404 on refresh)
+- Build Command / Output Directory: defaults are correct (`vercel.json`
+  adds the SPA rewrite so client-side routes like `/dashboard` don't 404 on
+  refresh)
 
 **Environment variable:**
 
@@ -80,22 +75,35 @@ Deploy. You'll get a live link like `https://<frontend-project>.vercel.app`.
 
 ## 4. Close the loop
 
-Once the frontend has its real URL, go back to the **backend** project's
-`CORS_ORIGIN` env var, set it to that URL, and redeploy the backend (Vercel
-→ Deployments → Redeploy) so the browser isn't blocked by CORS.
+Back on the **backend** project, set `CORS_ORIGIN` to the frontend's real
+URL and redeploy (Vercel → Deployments → Redeploy), so the browser isn't
+blocked by CORS.
+
+## How the database gets set up (no manual step)
+
+Two things used to require someone to run commands against the live
+database by hand — both are now automatic:
+
+1. **Schema migrations** — `package.json`'s `vercel-build` script runs
+   `prisma migrate deploy` as part of every Vercel build, before the app
+   goes live. Runs on Vercel's own infrastructure, so it works even though
+   this project's own dev sandbox can't reach an external database directly.
+2. **First admin login** — `PrismaService` checks on every boot whether any
+   admin user exists; if the database is brand new, it seeds the default
+   Super Admin login itself (same credentials the local `prisma db seed`
+   script creates, or your `ADMIN_EMAIL`/`ADMIN_PASSWORD` env vars if set).
+   Verified end-to-end against a genuinely empty database before this was
+   written up: fresh migrate deploy → cold boot → auto-seed fires → login
+   succeeds.
 
 ## Notes / limitations of this setup
 
 - **Cold starts:** the backend is a serverless function, not an always-on
-  server — the first request after idle time will be slower (Nest app
+  server — the first request after idle time is slower (Nest app
   bootstrap), then fast while the lambda stays warm.
-- **Migrations aren't automatic on deploy.** Vercel doesn't run
-  `prisma migrate deploy` for you; run it manually (step 1) whenever the
-  schema changes, before or right after deploying the code that needs it.
-- **Prisma binary target:** `schema.prisma` now includes
+- **Prisma binary target:** `schema.prisma` includes
   `binaryTargets = ["native", "rhel-openssl-3.0.x"]` so Prisma's query
   engine has a binary that matches Vercel's Node runtime, in addition to
   the one used for local dev.
-- Local development is unaffected — `npm run start:dev` /
-  `npm run dev` still work exactly as before; `api/index.ts` is only used
-  on Vercel.
+- Local development is unaffected — `npm run start:dev` / `npm run dev`
+  still work exactly as before; `api/index.ts` is only used on Vercel.
