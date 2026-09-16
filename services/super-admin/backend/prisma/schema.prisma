@@ -1,0 +1,100 @@
+// Super Admin service — isolated database (super_admin_db).
+// This service owns the tenant registry only: who the suppliers are, their
+// approval status, and the admin users who manage them. It does NOT hold
+// any tenant's operational data (catalog, pricing, RFQ responses) — that
+// lives in the Tenant Dashboard service's own isolated database once built,
+// scoped per tenant_id there.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  PENDING // application submitted, awaiting Super Admin review
+  APPROVED // active tenant, can access the Tenant Dashboard
+  REJECTED // application declined
+  SUSPENDED // was approved, temporarily disabled by Super Admin
+}
+
+enum TenantCategory {
+  TILES_CERAMICS
+  PAINT_COATINGS
+  SANITARY_WARE
+  ELECTRICAL_FIXTURES
+  HARDWARE
+  CARPENTRY_WOOD
+}
+
+// A tenant = one material supplier/wholesaler.
+model Tenant {
+  id            String         @id @default(uuid())
+  name          String
+  contactName   String
+  phone         String
+  whatsapp      String?
+  email         String?
+  district      String? // e.g. El Bostan, Ataba, Gomhoreya Street
+  categories    TenantCategory[]
+  status        TenantStatus   @default(PENDING)
+  notes         String? // internal admin notes, not shown to the tenant
+
+  // set when a tenant is approved and gets dashboard access
+  dashboardUserEmail String? @unique
+
+  application   TenantApplication? @relation("ApplicationToTenant")
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  reviewedAt    DateTime?
+  reviewedBy    String? // AdminUser id
+
+  @@map("tenants")
+}
+
+// A self-serve "request to join" submitted from the public website.
+// Reviewing one (approve/reject) creates or updates the linked Tenant.
+model TenantApplication {
+  id            String         @id @default(uuid())
+  shopName      String
+  contactName   String
+  phone         String
+  whatsapp      String?
+  email         String?
+  district      String?
+  categories    TenantCategory[]
+  message       String? // free-text pitch from the applicant
+
+  status        TenantStatus   @default(PENDING)
+  tenantId      String?        @unique
+  tenant        Tenant?        @relation("ApplicationToTenant", fields: [tenantId], references: [id])
+
+  submittedAt   DateTime       @default(now())
+  reviewedAt    DateTime?
+  reviewedBy    String? // AdminUser id
+  rejectionReason String?
+
+  @@map("tenant_applications")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  REVIEWER // can review applications, can't manage other admin users
+}
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(REVIEWER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+
+  @@map("admin_users")
+}
