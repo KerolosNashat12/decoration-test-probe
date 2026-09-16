@@ -42,6 +42,12 @@ export interface ProvisioningResult {
   temporaryPassword: string;
 }
 
+export interface AppConfig {
+  // The Tenant Dashboard's own login URL, or null if the backend has no
+  // TENANT_DASHBOARD_FRONTEND_URL configured yet (e.g. it isn't deployed).
+  tenantDashboardUrl: string | null;
+}
+
 export interface TenantApplication {
   id: string;
   shopName: string;

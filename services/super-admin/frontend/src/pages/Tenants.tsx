@@ -22,6 +22,8 @@ import {
   SearchOutlined,
   ShopOutlined,
   KeyOutlined,
+  CopyOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../api/client';
@@ -29,7 +31,14 @@ import { palette } from '../theme';
 import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/EmptyState';
 import { CredentialsModal } from '../components/CredentialsModal';
-import { TENANT_CATEGORY_LABELS, type ProvisioningResult, type Tenant, type TenantCategory, type TenantStatus } from '../types';
+import {
+  TENANT_CATEGORY_LABELS,
+  type AppConfig,
+  type ProvisioningResult,
+  type Tenant,
+  type TenantCategory,
+  type TenantStatus,
+} from '../types';
 
 const STATUS_COLORS: Record<Tenant['status'], string> = {
   PENDING: 'gold',
@@ -58,6 +67,7 @@ export function TenantsPage() {
   const [saving, setSaving] = useState(false);
   const [provisioning, setProvisioning] = useState(false);
   const [credentials, setCredentials] = useState<ProvisioningResult | null>(null);
+  const [config, setConfig] = useState<AppConfig | null>(null);
 
   const categoryOptions = ALL_CATEGORIES.map((value) => ({ value, label: t(`categories.${value}`) }));
   const statusOptions = ALL_STATUSES.map((value) => ({ value, label: t(`tenants.statusOptions.${value}`) }));
@@ -74,6 +84,12 @@ export function TenantsPage() {
 
   useEffect(() => {
     load();
+    // Best-effort: the login-link field just falls back to "not
+    // configured" if this fails, so it never blocks the tenants list.
+    apiClient
+      .get<AppConfig>('/config')
+      .then(({ data }) => setConfig(data))
+      .catch(() => setConfig({ tenantDashboardUrl: null }));
   }, []);
 
   const filtered = useMemo(() => {
@@ -351,6 +367,28 @@ export function TenantsPage() {
                   <Tag>{t('tenants.drawer.notProvisioned')}</Tag>
                 )}
               </Descriptions.Item>
+              {selected.dashboardUserEmail && (
+                <Descriptions.Item label={t('tenants.drawer.dashboardLoginLink')}>
+                  {config?.tenantDashboardUrl ? (
+                    <Space size={6}>
+                      <Typography.Link href={`${config.tenantDashboardUrl}/login`} target="_blank" rel="noreferrer">
+                        <LinkOutlined /> {config.tenantDashboardUrl}
+                      </Typography.Link>
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<CopyOutlined />}
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${config.tenantDashboardUrl}/login`);
+                          message.success(t('tenants.drawer.linkCopied'));
+                        }}
+                      />
+                    </Space>
+                  ) : (
+                    <Typography.Text type="secondary">{t('tenants.drawer.dashboardLoginLinkUnset')}</Typography.Text>
+                  )}
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label={t('tenants.drawer.added')}>{new Date(selected.createdAt).toLocaleString()}</Descriptions.Item>
               {selected.reviewedAt && (
                 <Descriptions.Item label={t('tenants.drawer.reviewed')}>
