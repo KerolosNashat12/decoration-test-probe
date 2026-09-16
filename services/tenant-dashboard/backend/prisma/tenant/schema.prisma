@@ -52,3 +52,74 @@ model Profile {
 
   @@map("profile")
 }
+
+// The tenant's product catalog. See the Tenant Dashboard SRS, §9-§11, for
+// the full field list, validation rules, and the deactivate-vs-delete flow.
+model Product {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  category    TenantCategory
+  price       Decimal        @db.Decimal(10, 2)
+  unit        String
+  photoUrl    String?
+  isActive    Boolean        @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rfqResponses RfqResponse[]
+
+  @@map("product")
+}
+
+enum RfqStatus {
+  NEW
+  RESPONDED
+  DECLINED
+  EXPIRED
+}
+
+// A buyer's request for quotation. Until the Public Website (Phase 3)
+// exists, `isTest` rows are created via the internal seed endpoint (SRS
+// §14) so this flow can be exercised end to end against real data.
+model Rfq {
+  id            String         @id @default(uuid())
+  buyerName     String
+  buyerPhone    String
+  category      TenantCategory
+  description   String
+  quantity      String?
+  deadlineAt    DateTime?
+  status        RfqStatus      @default(NEW)
+  isTest        Boolean        @default(false)
+  declineReason String?
+  declinedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  response RfqResponse?
+
+  @@map("rfq")
+}
+
+// A tenant's quote in reply to one RFQ. 1:1 with Rfq (rfqId is unique) —
+// only ever created by the "respond" action (SRS §13); a "decline" sets
+// Rfq.status directly and never creates one of these rows.
+model RfqResponse {
+  id  String @id @default(uuid())
+  rfq   Rfq    @relation(fields: [rfqId], references: [id])
+  rfqId String @unique
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+
+  price            Decimal @db.Decimal(10, 2)
+  priceUnit        String
+  availabilityNote String?
+  message          String?
+
+  respondedAt DateTime @default(now())
+
+  @@map("rfq_response")
+}

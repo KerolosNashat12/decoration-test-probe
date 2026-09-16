@@ -2,13 +2,23 @@
   "common": {
     "cancel": "Cancel",
     "saveChanges": "Save changes",
+    "save": "Save",
     "notProvided": "—",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "retry": "Retry",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "loading": "Loading…",
+    "loadError": "Something went wrong. Please try again.",
+    "networkError": "Couldn't reach the server. Check your connection and try again."
   },
   "nav": {
+    "dashboard": "Dashboard",
     "profile": "Shop Profile",
     "catalog": "Catalog",
-    "rfqs": "RFQ Replies",
+    "rfqs": "RFQ Inbox",
+    "settings": "Settings",
     "signOut": "Sign out"
   },
   "login": {
@@ -35,6 +45,184 @@
     "updateSuccess": "Profile updated",
     "updateError": "Could not save changes.",
     "loadError": "Could not load your profile."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "A quick look at your catalog and requests.",
+    "stats": {
+      "totalProducts": "Total products",
+      "totalProductsEmpty": "Add your first product",
+      "activeProducts": "Active products",
+      "newRfqs": "New RFQs",
+      "newRfqsEmpty": "No open requests",
+      "respondedThisMonth": "Responded this month"
+    },
+    "recentRfqs": {
+      "title": "Recent RFQs",
+      "buyer": "Buyer",
+      "category": "Category",
+      "submitted": "Submitted",
+      "status": "Status",
+      "empty": "No requests yet — they'll show up here once buyers start reaching out."
+    }
+  },
+  "catalog": {
+    "title": "Catalog",
+    "subtitle": "The products you sell to buyers on Decoration.",
+    "addProduct": "Add product",
+    "searchPlaceholder": "Search products…",
+    "filterCategory": "Category",
+    "filterStatus": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "price": "Price",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "empty": {
+      "title": "No products yet",
+      "description": "Add your first product to start building your catalog."
+    },
+    "emptyFiltered": {
+      "title": "No products match your filters",
+      "clear": "Clear filters"
+    },
+    "deleteConfirm": {
+      "title": "Delete {{name}}?",
+      "description": "This can't be undone.",
+      "ok": "Delete",
+      "cancel": "Cancel"
+    },
+    "deleteBlocked": "This product has already been quoted in an RFQ response — deactivate it instead of deleting it.",
+    "deleteSuccess": "Product deleted",
+    "toggleError": "Could not update the product's status.",
+    "form": {
+      "addTitle": "Add product",
+      "editTitle": "Edit product",
+      "name": "Name",
+      "category": "Category",
+      "description": "Description",
+      "price": "Price",
+      "unit": "Unit",
+      "unitPlaceholder": "e.g. m², piece, ton",
+      "photoUrl": "Photo URL",
+      "isActive": "Active",
+      "save": "Save",
+      "saveChanges": "Save changes",
+      "cancel": "Cancel",
+      "discardConfirm": {
+        "title": "Discard changes?",
+        "description": "You have unsaved changes.",
+        "ok": "Discard",
+        "cancel": "Keep editing"
+      },
+      "saveSuccess": "Product saved",
+      "saveError": "Could not save this product.",
+      "notFound": "This product no longer exists.",
+      "priceRule": "Price must be greater than 0.",
+      "nameRule": "Name must be between 2 and 120 characters."
+    }
+  },
+  "rfqs": {
+    "title": "RFQ Inbox",
+    "subtitle": "Requests for quotation from buyers.",
+    "filterStatus": {
+      "all": "All",
+      "new": "New",
+      "responded": "Responded",
+      "declined": "Declined",
+      "expired": "Expired"
+    },
+    "columns": {
+      "buyer": "Buyer",
+      "category": "Category",
+      "description": "Request",
+      "submitted": "Submitted",
+      "status": "Status"
+    },
+    "status": {
+      "NEW": "New",
+      "RESPONDED": "Responded",
+      "DECLINED": "Declined",
+      "EXPIRED": "Expired"
+    },
+    "testTag": "TEST",
+    "empty": {
+      "title": "No requests yet",
+      "description": "They'll appear here once buyers reach out."
+    },
+    "emptyFiltered": {
+      "title": "No requests match this filter",
+      "clearLink": "Show all"
+    },
+    "detail": {
+      "backToInbox": "Back to inbox",
+      "requestTitle": "Request details",
+      "buyer": "Buyer",
+      "phone": "Phone",
+      "category": "Category",
+      "description": "Requirements",
+      "quantity": "Quantity",
+      "submitted": "Submitted",
+      "deadline": "Deadline",
+      "responseTitle": "Your response",
+      "notFound": "This request no longer exists or isn't available.",
+      "form": {
+        "price": "Quoted price",
+        "priceUnit": "Price unit",
+        "linkedProduct": "Link a product (optional)",
+        "linkedProductPlaceholder": "Select from your catalog",
+        "availabilityNote": "Availability note",
+        "availabilityNotePlaceholder": "e.g. in stock, 7 days lead time",
+        "message": "Message to buyer",
+        "sendQuote": "Send quote",
+        "decline": "Decline",
+        "declineConfirm": {
+          "title": "Decline this request?",
+          "description": "This can't be undone.",
+          "reasonPlaceholder": "Reason (optional)",
+          "ok": "Decline",
+          "cancel": "Cancel"
+        },
+        "respondSuccess": "Quote sent",
+        "respondError": "Could not send your quote.",
+        "declineSuccess": "Request declined",
+        "declineError": "Could not decline this request.",
+        "conflict": "This request was already handled — its current status is shown below."
+      },
+      "summary": {
+        "quotedPrice": "Quoted price",
+        "availabilityNote": "Availability",
+        "message": "Message",
+        "respondedAt": "Responded",
+        "declineReason": "Reason",
+        "declinedAt": "Declined"
+      }
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your login for the Tenant Dashboard.",
+    "changePassword": {
+      "cardTitle": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Update password",
+      "success": "Password updated",
+      "wrongCurrent": "Current password is incorrect.",
+      "mismatch": "Passwords don't match.",
+      "tooShort": "Must be at least 8 characters."
+    }
   },
   "categories": {
     "TILES_CERAMICS": "Tiles & Ceramics",

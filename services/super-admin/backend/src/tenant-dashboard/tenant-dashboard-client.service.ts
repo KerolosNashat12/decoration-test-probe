@@ -62,4 +62,31 @@ export class TenantDashboardClientService {
       return null;
     }
   }
+
+  // Keeps a tenant's Tenant Dashboard login in sync with Super Admin's
+  // suspend/reactivate action. Same fail-soft contract as provisionTenant:
+  // never throws, returns false (not an error) if the Tenant Dashboard is
+  // unreachable or this tenant was never provisioned — suspending/
+  // reactivating in Super Admin must never fail because of this call.
+  async setDashboardAccountActive(tenantId: string, isActive: boolean): Promise<boolean> {
+    const baseUrl = process.env.TENANT_DASHBOARD_API_URL;
+    const secret = process.env.TENANT_DASHBOARD_INTERNAL_SECRET;
+    if (!baseUrl || !secret) return false;
+
+    try {
+      const response = await fetch(`${baseUrl}/internal/tenant-accounts/${tenantId}/active`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-Internal-Secret': secret },
+        body: JSON.stringify({ isActive }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!response.ok && response.status !== 404) {
+        this.logger.error(`Failed to set dashboard account active=${isActive} for tenant ${tenantId}: ${response.status}`);
+      }
+      return response.ok;
+    } catch (error) {
+      this.logger.error(`Could not reach Tenant Dashboard to set active=${isActive} for tenant ${tenantId}: ${(error as Error).message}`);
+      return false;
+    }
+  }
 }

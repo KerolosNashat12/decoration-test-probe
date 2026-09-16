@@ -18,7 +18,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(values.email, values.password);
-      navigate('/profile', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch {
       setError(t('login.error'));
     } finally {

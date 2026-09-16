@@ -2,13 +2,23 @@
   "common": {
     "cancel": "إلغاء",
     "saveChanges": "حفظ التغييرات",
+    "save": "حفظ",
     "notProvided": "—",
-    "comingSoon": "قريبًا"
+    "comingSoon": "قريبًا",
+    "retry": "إعادة المحاولة",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "loading": "جارٍ التحميل…",
+    "loadError": "حدث خطأ ما. حاول مرة أخرى.",
+    "networkError": "تعذّر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى."
   },
   "nav": {
+    "dashboard": "لوحة التحكم",
     "profile": "ملف المتجر",
     "catalog": "الكتالوج",
-    "rfqs": "الردود على طلبات الأسعار",
+    "rfqs": "طلبات الأسعار",
+    "settings": "الإعدادات",
     "signOut": "تسجيل الخروج"
   },
   "login": {
@@ -35,6 +45,184 @@
     "updateSuccess": "تم تحديث الملف",
     "updateError": "تعذّر حفظ التغييرات.",
     "loadError": "تعذّر تحميل ملفك."
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "نظرة سريعة على كتالوجك وطلباتك.",
+    "stats": {
+      "totalProducts": "إجمالي المنتجات",
+      "totalProductsEmpty": "أضف أول منتج لك",
+      "activeProducts": "المنتجات النشطة",
+      "newRfqs": "طلبات أسعار جديدة",
+      "newRfqsEmpty": "لا توجد طلبات مفتوحة",
+      "respondedThisMonth": "تم الرد عليها هذا الشهر"
+    },
+    "recentRfqs": {
+      "title": "أحدث طلبات الأسعار",
+      "buyer": "المشتري",
+      "category": "الفئة",
+      "submitted": "تاريخ الطلب",
+      "status": "الحالة",
+      "empty": "لا توجد طلبات بعد — ستظهر هنا بمجرد أن يتواصل المشترون."
+    }
+  },
+  "catalog": {
+    "title": "الكتالوج",
+    "subtitle": "المنتجات التي تبيعها للمشترين على Decoration.",
+    "addProduct": "إضافة منتج",
+    "searchPlaceholder": "ابحث عن منتجات…",
+    "filterCategory": "الفئة",
+    "filterStatus": {
+      "all": "الكل",
+      "active": "نشط",
+      "inactive": "غير نشط"
+    },
+    "columns": {
+      "name": "الاسم",
+      "category": "الفئة",
+      "price": "السعر",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط"
+    },
+    "empty": {
+      "title": "لا توجد منتجات بعد",
+      "description": "أضف أول منتج لبدء بناء كتالوجك."
+    },
+    "emptyFiltered": {
+      "title": "لا توجد منتجات مطابقة لعوامل التصفية",
+      "clear": "مسح عوامل التصفية"
+    },
+    "deleteConfirm": {
+      "title": "حذف {{name}}؟",
+      "description": "لا يمكن التراجع عن هذا الإجراء.",
+      "ok": "حذف",
+      "cancel": "إلغاء"
+    },
+    "deleteBlocked": "تم تسعير هذا المنتج بالفعل في رد على طلب سعر — قم بإلغاء تفعيله بدلاً من حذفه.",
+    "deleteSuccess": "تم حذف المنتج",
+    "toggleError": "تعذّر تحديث حالة المنتج.",
+    "form": {
+      "addTitle": "إضافة منتج",
+      "editTitle": "تعديل المنتج",
+      "name": "الاسم",
+      "category": "الفئة",
+      "description": "الوصف",
+      "price": "السعر",
+      "unit": "الوحدة",
+      "unitPlaceholder": "مثال: م²، قطعة، طن",
+      "photoUrl": "رابط الصورة",
+      "isActive": "نشط",
+      "save": "حفظ",
+      "saveChanges": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "discardConfirm": {
+        "title": "تجاهل التغييرات؟",
+        "description": "لديك تغييرات غير محفوظة.",
+        "ok": "تجاهل",
+        "cancel": "متابعة التعديل"
+      },
+      "saveSuccess": "تم حفظ المنتج",
+      "saveError": "تعذّر حفظ هذا المنتج.",
+      "notFound": "هذا المنتج لم يعد موجودًا.",
+      "priceRule": "يجب أن يكون السعر أكبر من 0.",
+      "nameRule": "يجب أن يكون الاسم بين 2 و120 حرفًا."
+    }
+  },
+  "rfqs": {
+    "title": "طلبات الأسعار",
+    "subtitle": "طلبات عروض الأسعار من المشترين.",
+    "filterStatus": {
+      "all": "الكل",
+      "new": "جديد",
+      "responded": "تم الرد",
+      "declined": "مرفوض",
+      "expired": "منتهي"
+    },
+    "columns": {
+      "buyer": "المشتري",
+      "category": "الفئة",
+      "description": "الطلب",
+      "submitted": "تاريخ الطلب",
+      "status": "الحالة"
+    },
+    "status": {
+      "NEW": "جديد",
+      "RESPONDED": "تم الرد",
+      "DECLINED": "مرفوض",
+      "EXPIRED": "منتهي"
+    },
+    "testTag": "تجريبي",
+    "empty": {
+      "title": "لا توجد طلبات بعد",
+      "description": "ستظهر هنا بمجرد أن يتواصل المشترون."
+    },
+    "emptyFiltered": {
+      "title": "لا توجد طلبات مطابقة لهذا الفلتر",
+      "clearLink": "عرض الكل"
+    },
+    "detail": {
+      "backToInbox": "العودة إلى الطلبات",
+      "requestTitle": "تفاصيل الطلب",
+      "buyer": "المشتري",
+      "phone": "الهاتف",
+      "category": "الفئة",
+      "description": "المتطلبات",
+      "quantity": "الكمية",
+      "submitted": "تاريخ الطلب",
+      "deadline": "الموعد النهائي",
+      "responseTitle": "ردك",
+      "notFound": "هذا الطلب لم يعد موجودًا أو غير متاح.",
+      "form": {
+        "price": "السعر المعروض",
+        "priceUnit": "وحدة السعر",
+        "linkedProduct": "ربط منتج (اختياري)",
+        "linkedProductPlaceholder": "اختر من كتالوجك",
+        "availabilityNote": "ملاحظة التوفر",
+        "availabilityNotePlaceholder": "مثال: متوفر، مدة التوريد 7 أيام",
+        "message": "رسالة للمشتري",
+        "sendQuote": "إرسال العرض",
+        "decline": "رفض",
+        "declineConfirm": {
+          "title": "رفض هذا الطلب؟",
+          "description": "لا يمكن التراجع عن هذا الإجراء.",
+          "reasonPlaceholder": "السبب (اختياري)",
+          "ok": "رفض",
+          "cancel": "إلغاء"
+        },
+        "respondSuccess": "تم إرسال العرض",
+        "respondError": "تعذّر إرسال عرضك.",
+        "declineSuccess": "تم رفض الطلب",
+        "declineError": "تعذّر رفض هذا الطلب.",
+        "conflict": "تمت معالجة هذا الطلب بالفعل — حالته الحالية موضحة أدناه."
+      },
+      "summary": {
+        "quotedPrice": "السعر المعروض",
+        "availabilityNote": "التوفر",
+        "message": "الرسالة",
+        "respondedAt": "تاريخ الرد",
+        "declineReason": "السبب",
+        "declinedAt": "تاريخ الرفض"
+      }
+    }
+  },
+  "settings": {
+    "title": "إعدادات الحساب",
+    "subtitle": "إدارة تسجيل دخولك للوحة تحكم المتجر.",
+    "changePassword": {
+      "cardTitle": "تغيير كلمة المرور",
+      "currentPassword": "كلمة المرور الحالية",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "تأكيد كلمة المرور الجديدة",
+      "submit": "تحديث كلمة المرور",
+      "success": "تم تحديث كلمة المرور",
+      "wrongCurrent": "كلمة المرور الحالية غير صحيحة.",
+      "mismatch": "كلمتا المرور غير متطابقتين.",
+      "tooShort": "يجب ألا تقل عن 8 أحرف."
+    }
   },
   "categories": {
     "TILES_CERAMICS": "بلاط وسيراميك",

@@ -146,6 +146,17 @@ Dashboard's databases directly. It calls the Tenant Dashboard backend's
    double-provision. (Not yet handling the narrower case of "database created,
    but the control-DB write failed" — that needs a reconciliation job, noted
    as a follow-up rather than solved here.)
+7. **Suspend/reactivate stays in sync too.** Suspending or reactivating a
+   tenant in Super Admin calls
+   `PATCH {TENANT_DASHBOARD_API_URL}/internal/tenant-accounts/:tenantId/active`
+   (same shared-secret guard) right after updating the `Tenant` row, so a
+   suspended tenant is actually locked out of their Tenant Dashboard login
+   (`TenantAccount.isActive`), not just shown as suspended in the registry.
+   Same fail-soft contract as provisioning: if the Tenant Dashboard is
+   unreachable, suspend/reactivate still succeeds in Super Admin — this was
+   caught and fixed during Phase 2 verification (a suspended tenant could
+   otherwise still sign in, since the two `isActive`-equivalent flags live
+   in different databases with nothing keeping them in sync automatically).
 
 **Caveat — this provisioning step assumes a long-running Node process**,
 not a serverless function: it shells out to run a migration and needs a

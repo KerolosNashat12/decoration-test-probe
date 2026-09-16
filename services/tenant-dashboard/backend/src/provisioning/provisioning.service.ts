@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcrypt';
@@ -68,6 +68,18 @@ export class ProvisioningService {
     this.logger.log(`Provisioned tenant ${dto.tenantId}: login ${dto.email}, database "${dbName}"`);
 
     return { email: dto.email, temporaryPassword, dbName };
+  }
+
+  // Keeps this service's login in sync with Super Admin's tenant registry:
+  // called when a tenant is suspended/reactivated there, so a suspended
+  // tenant is actually locked out here too (AuthService.login checks this
+  // same TenantAccount.isActive flag) rather than the two services'
+  // records silently drifting apart.
+  async setAccountActive(tenantId: string, isActive: boolean) {
+    const account = await this.control.tenantAccount.findUnique({ where: { id: tenantId } });
+    if (!account) throw new NotFoundException(`Tenant ${tenantId} is not provisioned`);
+    await this.control.tenantAccount.update({ where: { id: tenantId }, data: { isActive } });
+    return { success: true };
   }
 
   // Shells out to the Prisma CLI rather than a programmatic migration API —

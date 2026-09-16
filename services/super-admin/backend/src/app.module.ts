@@ -9,6 +9,7 @@ import { TenantApplicationsModule } from './tenant-applications/tenant-applicati
 import { AdminUsersModule } from './admin-users/admin-users.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
 import { TenantDashboardModule } from './tenant-dashboard/tenant-dashboard.module.js';
+import { MailModule } from './mail/mail.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TenantDashboardModule } from './tenant-dashboard/tenant-dashboard.modul
     AdminUsersModule,
     DashboardModule,
     TenantDashboardModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

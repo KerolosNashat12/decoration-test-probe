@@ -1,19 +1,31 @@
-import { useState } from 'react';
-import { Layout, Menu, Typography, Avatar, Dropdown, Drawer, Grid, Button, Tag, type MenuProps } from 'antd';
-import { UserOutlined, ShopOutlined, FileSearchOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Layout, Menu, Typography, Avatar, Dropdown, Drawer, Grid, Button, Badge, type MenuProps } from 'antd';
+import {
+  DashboardOutlined,
+  UserOutlined,
+  ShopOutlined,
+  FileSearchOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  MenuOutlined,
+} from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { palette } from '../theme';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { apiClient } from '../api/client';
+import type { DashboardSummary } from '../types';
 
 const { Header, Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
 
 const NAV_ITEMS = [
-  { key: 'profile', path: '/profile', icon: <UserOutlined />, labelKey: 'nav.profile', disabled: false },
-  { key: 'catalog', path: '/catalog', icon: <ShopOutlined />, labelKey: 'nav.catalog', disabled: true },
-  { key: 'rfqs', path: '/rfqs', icon: <FileSearchOutlined />, labelKey: 'nav.rfqs', disabled: true },
+  { key: 'dashboard', path: '/dashboard', icon: <DashboardOutlined />, labelKey: 'nav.dashboard', badge: false },
+  { key: 'profile', path: '/profile', icon: <UserOutlined />, labelKey: 'nav.profile', badge: false },
+  { key: 'catalog', path: '/catalog', icon: <ShopOutlined />, labelKey: 'nav.catalog', badge: false },
+  { key: 'rfqs', path: '/rfqs', icon: <FileSearchOutlined />, labelKey: 'nav.rfqs', badge: true },
+  { key: 'settings', path: '/settings', icon: <SettingOutlined />, labelKey: 'nav.settings', badge: false },
 ] as const;
 
 function Logo() {
@@ -50,9 +62,22 @@ export function DashboardLayout() {
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newRfqCount, setNewRfqCount] = useState(0);
   const { t } = useTranslation();
 
-  const selectedKey = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.key ?? 'profile';
+  // Lightweight badge count — fetched once per route change rather than
+  // polled live (SRS §18 only requires this to agree with the inbox's own
+  // count, not to update in real time across tabs/sessions).
+  useEffect(() => {
+    apiClient
+      .get<DashboardSummary>('/dashboard/summary')
+      .then(({ data }) => setNewRfqCount(data.newRfqs))
+      .catch(() => {
+        /* badge is a convenience — a failed fetch just leaves it at 0 */
+      });
+  }, [location.pathname]);
+
+  const selectedKey = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.key ?? 'dashboard';
 
   const userMenu: MenuProps['items'] = [
     { key: 'logout', icon: <LogoutOutlined />, label: t('nav.signOut'), onClick: logout },
@@ -67,22 +92,22 @@ export function DashboardLayout() {
     <Menu
       mode="inline"
       selectedKeys={[selectedKey]}
-      items={NAV_ITEMS.map(({ key, icon, labelKey, disabled }) => ({
+      items={NAV_ITEMS.map(({ key, icon, labelKey, badge }) => ({
         key,
         icon,
-        disabled,
-        label: disabled ? (
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            {t(labelKey)}
-            <Tag style={{ margin: 0, fontSize: 10 }}>{t('common.comingSoon')}</Tag>
-          </span>
-        ) : (
-          t(labelKey)
-        ),
+        label:
+          badge && newRfqCount > 0 ? (
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              {t(labelKey)}
+              <Badge count={newRfqCount} size="small" />
+            </span>
+          ) : (
+            t(labelKey)
+          ),
       }))}
       onClick={({ key }) => {
         const item = NAV_ITEMS.find((i) => i.key === key);
-        if (item && !item.disabled) goTo(item.path);
+        if (item) goTo(item.path);
       }}
       style={{ background: 'transparent', border: 'none', padding: '0 12px' }}
     />

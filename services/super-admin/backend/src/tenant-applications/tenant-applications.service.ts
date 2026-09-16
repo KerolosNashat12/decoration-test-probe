@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TenantDashboardClientService } from '../tenant-dashboard/tenant-dashboard-client.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { CreateApplicationDto } from './dto/create-application.dto.js';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class TenantApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenantDashboardClient: TenantDashboardClientService,
+    private readonly mail: MailService,
   ) {}
 
   // Public: a supplier requests to join from the website.
@@ -74,6 +76,20 @@ export class TenantApplicationsService {
       await this.prisma.tenant.update({
         where: { id: tenant.id },
         data: { dashboardUserEmail: provisioning.email },
+      });
+
+      // Awaited (not fire-and-forget) because this runs as a Vercel
+      // serverless function in production — an un-awaited promise can be
+      // frozen mid-flight once the response is sent, so the email would
+      // never actually go out. sendTenantCredentials never throws and
+      // never blocks the approval on a *failed* send, only on the (fast)
+      // attempt itself; the admin still sees the one-time password in the
+      // UI either way, so this can't make approval fail.
+      await this.mail.sendTenantCredentials({
+        to: provisioning.email,
+        tenantName: tenant.name,
+        loginEmail: provisioning.email,
+        temporaryPassword: provisioning.temporaryPassword,
       });
     }
 

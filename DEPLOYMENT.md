@@ -50,6 +50,9 @@ Create a new Vercel project from the GitHub repo (or `vercel --prod` from
 | `JWT_SECRET` | a long random string (`openssl rand -base64 48`) |
 | `CORS_ORIGIN` | the frontend's Vercel URL once you have it from step 3 (comma-separated if more than one) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | optional — override the default seeded login (`admin@decoration.local` / `ChangeMe123!`) |
+| `TENANT_DASHBOARD_API_URL` / `TENANT_DASHBOARD_INTERNAL_SECRET` | optional — only needed once the Tenant Dashboard service is also deployed; see `README.md`'s "Running the Tenant Dashboard service locally" |
+| `TENANT_DASHBOARD_FRONTEND_URL` | optional — the Tenant Dashboard's own live URL, used as the login link in the tenant credentials email below |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | optional — set all of these to email a tenant's login credentials right after provisioning; any SMTP-compatible provider works (Postmark, SendGrid, SES's SMTP endpoint, etc.). Left unset, the app works exactly as before — the temporary password is still shown once in the admin UI |
 
 Deploy. The live API is at `https://<backend-project>.vercel.app/api/...` —
 sanity-check with:
