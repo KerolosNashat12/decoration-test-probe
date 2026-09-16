@@ -1,23 +1,16 @@
 # Decoration
 
 Finishing-materials marketplace for the Egyptian fit-out/finishing trade.
-See `ARCHITECTURE.md` for the service layout and the open multi-tenant
-isolation decision.
+See `ARCHITECTURE.md` for the service layout and the multi-tenant isolation
+decision, and `DEPLOYMENT.md` for deploying Super Admin to Vercel with a
+live link.
 
 ## One-time setup (run once, in this folder)
 
-This folder isn't a git repo yet and dependencies aren't installed — both
-need to happen once, locally:
+This is already a git repo (`main` + `dev` branches). Install dependencies
+once, locally:
 
 ```bash
-# 1. Turn this folder into a git repo with dev + main branches
-git init
-git checkout -b main
-git add .
-git commit -m "Initial Super Admin service scaffold"
-git checkout -b dev
-
-# 2. Install dependencies for the Super Admin service
 cd services/super-admin/backend && npm install && cd ../../..
 cd services/super-admin/frontend && npm install && cd ../../..
 ```
