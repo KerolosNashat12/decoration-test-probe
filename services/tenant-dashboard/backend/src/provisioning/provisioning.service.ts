@@ -1,12 +1,13 @@
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcryptjs';
+import { Client } from 'pg';
 import { PrismaControlService } from '../prisma-control/prisma-control.service.js';
 import { TenantPrismaFactory } from '../tenant-db/tenant-prisma.factory.js';
 import { buildTenantDatabaseUrl, tenantDbNameFor } from '../tenant-db/tenant-db.util.js';
 import { createTenantDatabase } from './db-admin.util.js';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto.js';
+import { TENANT_MIGRATIONS } from './tenant-migrations.sql.js';
 import type { TenantCategory } from '../../generated/tenant/index.js';
 
 @Injectable()
@@ -34,7 +35,7 @@ export class ProvisioningService {
     this.logger.log(`Provisioning tenant ${dto.tenantId} -> database "${dbName}"`);
 
     await createTenantDatabase(dbName);
-    this.runTenantMigrations(dbName);
+    await this.runTenantMigrations(dbName);
 
     const tenantClient = this.tenantPrisma.forDatabase(dbName);
     await tenantClient.profile.upsert({
@@ -82,15 +83,68 @@ export class ProvisioningService {
     return { success: true };
   }
 
-  // Shells out to the Prisma CLI rather than a programmatic migration API —
-  // see the "Caveat" paragraph in ARCHITECTURE.md's provisioning section:
-  // this assumes a long-running Node process with a writable filesystem and
-  // shell access, which a Vercel serverless function is not.
-  private runTenantMigrations(dbName: string) {
-    execFileSync('npx', ['prisma', 'migrate', 'deploy', '--schema=prisma/tenant/schema.prisma'], {
-      cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: buildTenantDatabaseUrl(dbName) },
-      stdio: 'pipe',
-    });
+  // Applies the tenant-schema migrations by running their SQL directly over
+  // a plain `pg` connection, rather than shelling out to the Prisma CLI
+  // (`npx prisma migrate deploy`). The old shell-out approach — see
+  // ARCHITECTURE.md's "Caveat" paragraph on this flow, which called it out
+  // as a likely problem before this was ever deployed — failed on every
+  // real attempt on Vercel with `ENOENT ... mkdir '/home/sbx_user1051'`:
+  // a serverless function's filesystem is read-only, so npx has nowhere to
+  // write its cache/home directory, let alone download or run the Prisma
+  // CLI. Running the migration SQL ourselves needs nothing but an open
+  // Postgres connection, which is the one thing a serverless function can
+  // always do within its execution limit.
+  //
+  // Mirrors what `prisma migrate deploy` itself does: apply each pending
+  // migration's SQL in order inside a transaction, then record it in
+  // `_prisma_migrations` (same columns Prisma uses, with a matching sha256
+  // checksum of the migration.sql content) so the database's migration
+  // history stays in a shape Prisma tooling recognizes, should anyone run
+  // `prisma migrate status`/`deploy` against a tenant database by hand
+  // later (e.g. from a dev machine).
+  private async runTenantMigrations(dbName: string) {
+    const client = new Client({ connectionString: buildTenantDatabaseUrl(dbName) });
+    await client.connect();
+    try {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+            "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+            "checksum" VARCHAR(64) NOT NULL,
+            "finished_at" TIMESTAMPTZ,
+            "migration_name" VARCHAR(255) NOT NULL,
+            "logs" TEXT,
+            "rolled_back_at" TIMESTAMPTZ,
+            "started_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+            "applied_steps_count" INTEGER NOT NULL DEFAULT 0
+        );
+      `);
+
+      for (const migration of TENANT_MIGRATIONS) {
+        const { rows } = await client.query('SELECT 1 FROM "_prisma_migrations" WHERE "migration_name" = $1', [
+          migration.name,
+        ]);
+        if (rows.length > 0) {
+          continue; // already applied — e.g. a retry after a later step failed
+        }
+
+        const checksum = crypto.createHash('sha256').update(migration.sql).digest('hex');
+        try {
+          await client.query('BEGIN');
+          await client.query(migration.sql);
+          await client.query(
+            `INSERT INTO "_prisma_migrations"
+               ("id", "checksum", "finished_at", "migration_name", "started_at", "applied_steps_count")
+             VALUES ($1, $2, now(), $3, now(), 1)`,
+            [crypto.randomUUID(), checksum, migration.name],
+          );
+          await client.query('COMMIT');
+        } catch (error) {
+          await client.query('ROLLBACK');
+          throw error;
+        }
+      }
+    } finally {
+      await client.end();
+    }
   }
 }
