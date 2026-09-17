@@ -3,7 +3,7 @@
 // Change ADMIN_EMAIL / ADMIN_PASSWORD via env vars before running in
 // anything other than local dev — this seed is meant for bootstrapping.
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
