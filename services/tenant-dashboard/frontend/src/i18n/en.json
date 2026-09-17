@@ -19,7 +19,9 @@
     "catalog": "Catalog",
     "rfqs": "RFQ Inbox",
     "settings": "Settings",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "sectionOperations": "OPERATIONS",
+    "sectionAccount": "ACCOUNT"
   },
   "login": {
     "welcome": "Welcome back 👋",
@@ -49,13 +51,32 @@
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "A quick look at your catalog and requests.",
+    "actions": {
+      "newProduct": "New product",
+      "viewRfqInbox": "View RFQ inbox"
+    },
     "stats": {
       "totalProducts": "Total products",
       "totalProductsEmpty": "Add your first product",
       "activeProducts": "Active products",
       "newRfqs": "New RFQs",
       "newRfqsEmpty": "No open requests",
-      "respondedThisMonth": "Responded this month"
+      "respondedThisMonth": "Responded this month",
+      "totalRfqs": "Total RFQs",
+      "declinedRfqs": "Declined RFQs",
+      "expiredRfqs": "Expired RFQs",
+      "expiringSoon": "Expiring soon"
+    },
+    "trend": {
+      "title": "RFQs — last 30 days",
+      "total": "{{count}} requests in the last 30 days",
+      "empty": "Not enough data yet."
+    },
+    "attention": {
+      "title": "Needs your attention",
+      "newRfqsLine": "New RFQs waiting for a response: {{count}}",
+      "expiringSoonLine": "Requests expiring soon: {{count}}",
+      "allClear": "All caught up — nothing needs your attention right now."
     },
     "recentRfqs": {
       "title": "Recent RFQs",
