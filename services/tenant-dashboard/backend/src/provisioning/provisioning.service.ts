@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { PrismaControlService } from '../prisma-control/prisma-control.service.js';
 import { TenantPrismaFactory } from '../tenant-db/tenant-prisma.factory.js';
 import { buildTenantDatabaseUrl, tenantDbNameFor } from '../tenant-db/tenant-db.util.js';
