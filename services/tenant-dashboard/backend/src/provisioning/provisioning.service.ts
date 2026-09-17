@@ -24,12 +24,37 @@ export class ProvisioningService {
   // step before the last is idempotent (create-database and migrate-deploy
   // are no-ops if already done; the profile seed is an upsert), and the
   // control-database row is written LAST, since that row is exactly what
-  // the idempotency check at the top keys off — so "did this already
+  // the idempotency check at the top keys off â so "did this already
   // fully succeed" and "is it safe to redo the earlier steps" agree.
   async provision(dto: ProvisionTenantDto) {
     const existing = await this.control.tenantAccount.findUnique({ where: { id: dto.tenantId } });
     if (existing) {
-      throw new ConflictException(`Tenant ${dto.tenantId} is already provisioned`);
+      // Already provisioned â most often a retry after Super Admin never
+      // learned this succeeded (e.g. it lost the response after this step
+      // completed, or an earlier bug dropped the result). The database and
+      // profile are already set up, so rather than permanently dead-ending
+      // every future retry with a conflict, treat this as a credential
+      // reset: issue a fresh one-time password and refresh the login email
+      // in case it changed. This is what makes the "Provision dashboard
+      // access" retry in Super Admin actually recover a stuck tenant
+      // instead of just re-confirming it's stuck.
+      const temporaryPassword = crypto.randomBytes(12).toString('base64url');
+      const passwordHash = await bcrypt.hash(temporaryPassword, 10);
+      try {
+        await this.control.tenantAccount.update({
+          where: { id: dto.tenantId },
+          data: { name: dto.name, email: dto.email, passwordHash },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+          throw new ConflictException(
+            `A dashboard account already exists with email "${dto.email}" â each tenant needs a unique login email before it can be provisioned.`,
+          );
+        }
+        throw error;
+      }
+      this.logger.log(`Tenant ${dto.tenantId} was already provisioned â issued a new temporary password`);
+      return { email: dto.email, temporaryPassword, dbName: existing.dbName };
     }
 
     const dbName = tenantDbNameFor(dto.tenantId);
@@ -71,12 +96,12 @@ export class ProvisioningService {
       // Each dashboard login email must be unique across all tenants (it's
       // the login identifier). Without this, the raw Prisma P2002 error
       // leaked out of the controller as an opaque 500 "Internal server
-      // error" — Super Admin's client then collapsed that into a
+      // error" â Super Admin's client then collapsed that into a
       // misleading "Could not reach the Tenant Dashboard service" message,
       // which sent admins chasing a network problem that didn't exist.
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException(
-          `A dashboard account already exists with email "${dto.email}" — each tenant needs a unique login email before it can be provisioned.`,
+          `A dashboard account already exists with email "${dto.email}" â each tenant needs a unique login email before it can be provisioned.`,
         );
       }
       throw error;
@@ -101,9 +126,9 @@ export class ProvisioningService {
 
   // Applies the tenant-schema migrations by running their SQL directly over
   // a plain `pg` connection, rather than shelling out to the Prisma CLI
-  // (`npx prisma migrate deploy`). The old shell-out approach — see
+  // (`npx prisma migrate deploy`). The old shell-out approach â see
   // ARCHITECTURE.md's "Caveat" paragraph on this flow, which called it out
-  // as a likely problem before this was ever deployed — failed on every
+  // as a likely problem before this was ever deployed â failed on every
   // real attempt on Vercel with `ENOENT ... mkdir '/home/sbx_user1051'`:
   // a serverless function's filesystem is read-only, so npx has nowhere to
   // write its cache/home directory, let alone download or run the Prisma
@@ -140,7 +165,7 @@ export class ProvisioningService {
           migration.name,
         ]);
         if (rows.length > 0) {
-          continue; // already applied — e.g. a retry after a later step failed
+          continue; // already applied â e.g. a retry after a later step failed
         }
 
         const checksum = crypto.createHash('sha256').update(migration.sql).digest('hex');
