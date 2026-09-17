@@ -7,6 +7,12 @@ export interface ProvisionResult {
   dbName: string;
 }
 
+// Discriminated union so callers that need to explain a failure to an admin
+// (TenantsService.provisionDashboard's retry action) can, while callers that
+// intentionally don't care (TenantApplicationsService.approve — provisioning
+// is decoupled from approval succeeding) can keep just checking `ok`.
+export type ProvisionOutcome = { ok: true; result: ProvisionResult } | { ok: false; reason: string };
+
 // Talks to the Tenant Dashboard backend's internal API — see
 // ARCHITECTURE.md ("Provisioning flow"). This is the ONLY place in Super
 // Admin that reaches across to that service; everything else about a
@@ -15,22 +21,28 @@ export interface ProvisionResult {
 export class TenantDashboardClientService {
   private readonly logger = new Logger(TenantDashboardClientService.name);
 
-  // Returns null (never throws) when provisioning can't happen or fails —
-  // callers treat "no dashboard access yet" as a normal, retryable state,
-  // not a reason to fail the approval/retry action itself. See the
-  // "Provisioning is decoupled from approval succeeding" note in
-  // ARCHITECTURE.md.
-  async provisionTenant(tenant: Pick<Tenant, 'id' | 'name' | 'contactName' | 'phone' | 'whatsapp' | 'email' | 'district' | 'categories'>): Promise<ProvisionResult | null> {
+  // Never throws — callers that don't care about the reason (e.g. approval,
+  // where provisioning is decoupled from approval succeeding — see
+  // ARCHITECTURE.md) can just check `ok` and treat "no dashboard access
+  // yet" as a normal, retryable state. Callers that DO surface this to an
+  // admin (TenantsService.provisionDashboard) get a real reason instead of
+  // a one-size-fits-all message: a non-2xx response from the Tenant
+  // Dashboard means it was reached and it rejected the request (e.g. a
+  // duplicate login email) — that's a different, more actionable situation
+  // than the fetch itself failing (DNS/timeout/network), and conflating
+  // the two here previously sent admins chasing a "can't reach the
+  // service" network problem that didn't exist.
+  async provisionTenant(tenant: Pick<Tenant, 'id' | 'name' | 'contactName' | 'phone' | 'whatsapp' | 'email' | 'district' | 'categories'>): Promise<ProvisionOutcome> {
     const baseUrl = process.env.TENANT_DASHBOARD_API_URL;
     const secret = process.env.TENANT_DASHBOARD_INTERNAL_SECRET;
 
     if (!tenant.email) {
       this.logger.warn(`Tenant ${tenant.id} has no email on file — skipping dashboard provisioning`);
-      return null;
+      return { ok: false, reason: 'This tenant has no email on file — add one before provisioning dashboard access.' };
     }
     if (!baseUrl || !secret) {
       this.logger.warn('TENANT_DASHBOARD_API_URL / TENANT_DASHBOARD_INTERNAL_SECRET not configured — skipping provisioning');
-      return null;
+      return { ok: false, reason: 'The Tenant Dashboard integration is not configured.' };
     }
 
     try {
@@ -53,13 +65,23 @@ export class TenantDashboardClientService {
       if (!response.ok) {
         const body = await response.text();
         this.logger.error(`Provisioning failed for tenant ${tenant.id}: ${response.status} ${body}`);
-        return null;
+        // The Tenant Dashboard's own errors (ConflictException, BadRequestException, ...)
+        // come back as { message: string }; fall back to a generic reason for anything else
+        // (e.g. an unhandled 500) rather than leaking a raw body to the admin UI.
+        let reason = 'The Tenant Dashboard service rejected this request — check its logs for details.';
+        try {
+          const parsed = JSON.parse(body) as { message?: string };
+          if (parsed?.message) reason = parsed.message;
+        } catch {
+          // body wasn't JSON — keep the generic reason
+        }
+        return { ok: false, reason };
       }
 
-      return (await response.json()) as ProvisionResult;
+      return { ok: true, result: (await response.json()) as ProvisionResult };
     } catch (error) {
       this.logger.error(`Could not reach Tenant Dashboard to provision tenant ${tenant.id}: ${(error as Error).message}`);
-      return null;
+      return { ok: false, reason: 'Could not reach the Tenant Dashboard service to provision access — try again shortly.' };
     }
   }
 
