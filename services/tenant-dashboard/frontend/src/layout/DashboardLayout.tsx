@@ -22,10 +22,18 @@ const { useBreakpoint } = Grid;
 
 const NAV_ITEMS = [
   { key: 'dashboard', path: '/dashboard', icon: <DashboardOutlined />, labelKey: 'nav.dashboard', badge: false },
-  { key: 'profile', path: '/profile', icon: <UserOutlined />, labelKey: 'nav.profile', badge: false },
-  { key: 'catalog', path: '/catalog', icon: <ShopOutlined />, labelKey: 'nav.catalog', badge: false },
   { key: 'rfqs', path: '/rfqs', icon: <FileSearchOutlined />, labelKey: 'nav.rfqs', badge: true },
+  { key: 'catalog', path: '/catalog', icon: <ShopOutlined />, labelKey: 'nav.catalog', badge: false },
+  { key: 'profile', path: '/profile', icon: <UserOutlined />, labelKey: 'nav.profile', badge: false },
   { key: 'settings', path: '/settings', icon: <SettingOutlined />, labelKey: 'nav.settings', badge: false },
+] as const;
+
+// Sidebar nav is grouped into labeled sections (structural pattern borrowed
+// from a reference admin dashboard â grouped nav under bold uppercase
+// section labels), not a flat list. Keys must all exist in NAV_ITEMS above.
+const NAV_SECTIONS = [
+  { labelKey: 'nav.sectionOperations', keys: ['dashboard', 'rfqs', 'catalog'] },
+  { labelKey: 'nav.sectionAccount', keys: ['profile', 'settings'] },
 ] as const;
 
 function Logo() {
@@ -65,15 +73,15 @@ export function DashboardLayout() {
   const [newRfqCount, setNewRfqCount] = useState(0);
   const { t } = useTranslation();
 
-  // Lightweight badge count — fetched once per route change rather than
-  // polled live (SRS §18 only requires this to agree with the inbox's own
+  // Lightweight badge count â fetched once per route change rather than
+  // polled live (SRS Â§18 only requires this to agree with the inbox's own
   // count, not to update in real time across tabs/sessions).
   useEffect(() => {
     apiClient
       .get<DashboardSummary>('/dashboard/summary')
       .then(({ data }) => setNewRfqCount(data.newRfqs))
       .catch(() => {
-        /* badge is a convenience — a failed fetch just leaves it at 0 */
+        /* badge is a convenience â a failed fetch just leaves it at 0 */
       });
   }, [location.pathname]);
 
@@ -88,35 +96,54 @@ export function DashboardLayout() {
     setDrawerOpen(false);
   }
 
-  const navMenu = (
-    <Menu
-      mode="inline"
-      selectedKeys={[selectedKey]}
-      items={NAV_ITEMS.map(({ key, icon, labelKey, badge }) => ({
-        key,
-        icon,
-        label:
-          badge && newRfqCount > 0 ? (
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              {t(labelKey)}
-              <Badge count={newRfqCount} size="small" />
-            </span>
-          ) : (
-            t(labelKey)
-          ),
-      }))}
-      onClick={({ key }) => {
-        const item = NAV_ITEMS.find((i) => i.key === key);
-        if (item) goTo(item.path);
-      }}
-      style={{ background: 'transparent', border: 'none', padding: '0 12px' }}
-    />
-  );
+  function renderNavMenu(keys: readonly string[]) {
+    const items = NAV_ITEMS.filter((item) => keys.includes(item.key));
+    return (
+      <Menu
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={items.map(({ key, icon, labelKey, badge }) => ({
+          key,
+          icon,
+          label:
+            badge && newRfqCount > 0 ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                {t(labelKey)}
+                <Badge count={newRfqCount} size="small" />
+              </span>
+            ) : (
+              t(labelKey)
+            ),
+        }))}
+        onClick={({ key }) => {
+          const item = NAV_ITEMS.find((i) => i.key === key);
+          if (item) goTo(item.path);
+        }}
+        style={{ background: 'transparent', border: 'none', padding: '0 12px' }}
+      />
+    );
+  }
 
-  const sectionLabel = (
-    <div style={{ padding: '16px 20px 4px', fontSize: 11, letterSpacing: 1, color: palette.textTertiary, fontWeight: 600 }}>
-      MAIN
-    </div>
+  function renderSectionLabel(labelKey: string) {
+    return (
+      <div
+        key={labelKey}
+        style={{ padding: '16px 20px 4px', fontSize: 11, letterSpacing: 1, color: palette.textTertiary, fontWeight: 600 }}
+      >
+        {t(labelKey)}
+      </div>
+    );
+  }
+
+  const navSections = (
+    <>
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.labelKey}>
+          {renderSectionLabel(section.labelKey)}
+          {renderNavMenu(section.keys)}
+        </div>
+      ))}
+    </>
   );
 
   return (
@@ -124,8 +151,7 @@ export function DashboardLayout() {
       {!isMobile && (
         <Sider width={240} style={{ borderRight: `1px solid ${palette.border}` }}>
           <Logo />
-          {sectionLabel}
-          {navMenu}
+          {navSections}
         </Sider>
       )}
 
@@ -139,12 +165,14 @@ export function DashboardLayout() {
           styles={{ body: { padding: 0, background: palette.bg }, content: { background: palette.bg } }}
         >
           <Logo />
-          {sectionLabel}
-          {navMenu}
+          {navSections}
         </Drawer>
       )}
 
       <Layout>
+        {/* No quick-actions row here: Dashboard.tsx's own PageHeader owns
+            quick actions for the /dashboard route, keeping this layout
+            header route-agnostic and avoiding overlap with that page. */}
         <Header
           style={{
             background: palette.bg,
