@@ -8,6 +8,7 @@ import { buildTenantDatabaseUrl, tenantDbNameFor } from '../tenant-db/tenant-db.
 import { createTenantDatabase } from './db-admin.util.js';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto.js';
 import { TENANT_MIGRATIONS } from './tenant-migrations.sql.js';
+import { Prisma } from '../../generated/control/index.js';
 import type { TenantCategory } from '../../generated/tenant/index.js';
 
 @Injectable()
@@ -56,15 +57,30 @@ export class ProvisioningService {
     const temporaryPassword = crypto.randomBytes(12).toString('base64url');
     const passwordHash = await bcrypt.hash(temporaryPassword, 10);
 
-    await this.control.tenantAccount.create({
-      data: {
-        id: dto.tenantId,
-        name: dto.name,
-        email: dto.email,
-        passwordHash,
-        dbName,
-      },
-    });
+    try {
+      await this.control.tenantAccount.create({
+        data: {
+          id: dto.tenantId,
+          name: dto.name,
+          email: dto.email,
+          passwordHash,
+          dbName,
+        },
+      });
+    } catch (error) {
+      // Each dashboard login email must be unique across all tenants (it's
+      // the login identifier). Without this, the raw Prisma P2002 error
+      // leaked out of the controller as an opaque 500 "Internal server
+      // error" — Super Admin's client then collapsed that into a
+      // misleading "Could not reach the Tenant Dashboard service" message,
+      // which sent admins chasing a network problem that didn't exist.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException(
+          `A dashboard account already exists with email "${dto.email}" — each tenant needs a unique login email before it can be provisioned.`,
+        );
+      }
+      throw error;
+    }
 
     this.logger.log(`Provisioned tenant ${dto.tenantId}: login ${dto.email}, database "${dbName}"`);
 

@@ -71,7 +71,8 @@ export class TenantApplicationsService {
     // tenant has no email on file, the tenant is still approved; the
     // Tenants page offers a "Provision dashboard access" retry for it (see
     // TenantsService.provisionDashboard). See ARCHITECTURE.md.
-    const provisioning = await this.tenantDashboardClient.provisionTenant(tenant);
+    const outcome = await this.tenantDashboardClient.provisionTenant(tenant);
+    const provisioning = outcome.ok ? outcome.result : null;
     if (provisioning) {
       await this.prisma.tenant.update({
         where: { id: tenant.id },
