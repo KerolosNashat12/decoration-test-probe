@@ -43,7 +43,7 @@ export class TenantsService {
     const tenant = await this.prisma.tenant.update({ where: { id }, data: { status: 'SUSPENDED' } });
     // Best-effort: if this tenant has dashboard access, lock it too, so
     // suspending here actually stops them from using their Tenant
-    // Dashboard login — not just from showing as "approved" in this
+    // Dashboard login â not just from showing as "approved" in this
     // registry. Never blocks the suspend action itself (see
     // TenantDashboardClientService.setDashboardAccountActive).
     if (tenant.dashboardUserEmail) {
@@ -62,7 +62,7 @@ export class TenantsService {
   }
 
   // Retry path for a tenant that was approved but never got dashboard
-  // access — either it had no email on file yet (now added via update()),
+  // access â either it had no email on file yet (now added via update()),
   // or the Tenant Dashboard was unreachable at approval time. See
   // "Provisioning is decoupled from approval succeeding" in ARCHITECTURE.md.
   async provisionDashboard(id: string) {
@@ -74,12 +74,11 @@ export class TenantsService {
       throw new BadRequestException('Add an email for this tenant before provisioning dashboard access');
     }
 
-    const provisioning = await this.tenantDashboardClient.provisionTenant(tenant);
-    if (!provisioning) {
-      throw new BadRequestException(
-        'Could not reach the Tenant Dashboard service to provision access — try again shortly.',
-      );
+    const outcome = await this.tenantDashboardClient.provisionTenant(tenant);
+    if (!outcome.ok) {
+      throw new BadRequestException(outcome.reason);
     }
+    const provisioning = outcome.result;
 
     await this.prisma.tenant.update({ where: { id }, data: { dashboardUserEmail: provisioning.email } });
 
