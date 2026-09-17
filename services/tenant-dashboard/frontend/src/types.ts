@@ -102,4 +102,12 @@ export interface DashboardSummary {
   newRfqs: number;
   respondedThisMonth: number;
   recentRfqs: Rfq[];
+  // Added for the richer dashboard overview (SRS Â§7 extension): a fuller
+  // KPI set plus a 30-day trend so the dashboard reads at a glance instead
+  // of just a handful of counters.
+  totalRfqs: number;
+  declinedRfqs: number;
+  expiredRfqs: number;
+  expiringSoon: number; // NEW rfqs whose deadline is within the next 48h
+  rfqTrend: { date: string; count: number }[]; // last 30 days, oldest first
 }
