@@ -3,13 +3,13 @@
     "cancel": "Cancel",
     "saveChanges": "Save changes",
     "save": "Save",
-    "notProvided": "â",
+    "notProvided": "—",
     "comingSoon": "Coming soon",
     "retry": "Retry",
     "delete": "Delete",
     "edit": "Edit",
     "back": "Back",
-    "loading": "Loadingâ¦",
+    "loading": "Loading…",
     "loadError": "Something went wrong. Please try again.",
     "networkError": "Couldn't reach the server. Check your connection and try again."
   },
@@ -24,7 +24,7 @@
     "sectionAccount": "ACCOUNT"
   },
   "login": {
-    "welcome": "Welcome back ð",
+    "welcome": "Welcome back 👋",
     "subtitle": "Sign in to manage your shop's profile.",
     "email": "Email",
     "password": "Password",
@@ -68,7 +68,7 @@
       "expiringSoon": "Expiring soon"
     },
     "trend": {
-      "title": "RFQs â last 30 days",
+      "title": "RFQs — last 30 days",
       "total": "{{count}} requests in the last 30 days",
       "empty": "Not enough data yet."
     },
@@ -76,7 +76,7 @@
       "title": "Needs your attention",
       "newRfqsLine": "New RFQs waiting for a response: {{count}}",
       "expiringSoonLine": "Requests expiring soon: {{count}}",
-      "allClear": "All caught up â nothing needs your attention right now."
+      "allClear": "All caught up — nothing needs your attention right now."
     },
     "recentRfqs": {
       "title": "Recent RFQs",
@@ -84,14 +84,14 @@
       "category": "Category",
       "submitted": "Submitted",
       "status": "Status",
-      "empty": "No requests yet â they'll show up here once buyers start reaching out."
+      "empty": "No requests yet — they'll show up here once buyers start reaching out."
     }
   },
   "catalog": {
     "title": "Catalog",
     "subtitle": "The products you sell to buyers on Decoration.",
     "addProduct": "Add product",
-    "searchPlaceholder": "Search productsâ¦",
+    "searchPlaceholder": "Search products…",
     "filterCategory": "Category",
     "filterStatus": {
       "all": "All",
@@ -123,7 +123,7 @@
       "ok": "Delete",
       "cancel": "Cancel"
     },
-    "deleteBlocked": "This product has already been quoted in an RFQ response â deactivate it instead of deleting it.",
+    "deleteBlocked": "This product has already been quoted in an RFQ response — deactivate it instead of deleting it.",
     "deleteSuccess": "Product deleted",
     "toggleError": "Could not update the product's status.",
     "form": {
@@ -134,7 +134,7 @@
       "description": "Description",
       "price": "Price",
       "unit": "Unit",
-      "unitPlaceholder": "e.g. mÂ², piece, ton",
+      "unitPlaceholder": "e.g. m², piece, ton",
       "photoUrl": "Photo URL",
       "isActive": "Active",
       "save": "Save",
@@ -218,7 +218,7 @@
         "respondError": "Could not send your quote.",
         "declineSuccess": "Request declined",
         "declineError": "Could not decline this request.",
-        "conflict": "This request was already handled â its current status is shown below."
+        "conflict": "This request was already handled — its current status is shown below."
       },
       "summary": {
         "quotedPrice": "Quoted price",
